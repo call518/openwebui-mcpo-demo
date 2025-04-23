@@ -1,11 +1,11 @@
 # OpenWebUI MCP 데모
 
-이 프로젝트는 OpenWebUI와 MCP(Model Control Protocol) 서버를 Docker Compose를 통해 통합한 데모입니다. 로컬 Ollama 모델과 OpenAI API를 함께 사용할 수 있는 편리한 웹 인터페이스를 제공합니다.
+이 프로젝트는 OpenWebUI와 MCP(Model Context Protocol) 서버를 Docker Compose를 통해 통합한 데모입니다. 로컬 Ollama 모델과 OpenAI API를 함께 사용할 수 있는 편리한 웹 인터페이스를 제공합니다.
 
 ## 개요
 
 - **OpenWebUI**: Ollama 및 다양한 LLM API를 위한 웹 인터페이스
-- **MCP 프록시**: 도구 기능을 제공하는 Model Control Protocol 서버
+- **MCP 프록시**: 도구 기능을 제공하는 Model Context Protocol 서버
 
 ## 시스템 요구사항
 
