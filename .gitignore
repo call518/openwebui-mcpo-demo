@@ -1,0 +1,49 @@
+# 노드 모듈 및 로그
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+.pnpm-debug.log
+
+# 빌드 출력
+dist/
+build/
+.next/
+out/
+
+# 환경 설정
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 에디터 및 IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# 도커 관련
+docker-compose.override.yml
+
+# MCP 설정 관련
+mcp-proxy/
+
+# 임시 파일
+tmp/
+temp/
+.cache/
+
+# 로그 파일
+logs/
+*.log
+
+# 데이터베이스
+*.sqlite
+*.db
+
+# 시스템 파일
+Thumbs.db
+.DS_Store 
