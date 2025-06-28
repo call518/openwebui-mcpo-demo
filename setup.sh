@@ -20,6 +20,9 @@ WORKDIR /app
 # Install required packages
 RUN pip install mcpo uv
 
+# Add MCP AI-powered-Developmen
+RUN apt-get update && apt-get install -y git vim
+
 # Create config directory
 RUN mkdir -p /app/config
 
