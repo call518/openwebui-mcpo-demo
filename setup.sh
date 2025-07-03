@@ -21,7 +21,10 @@ WORKDIR /app
 RUN pip install mcpo uv
 
 # Install git and etc..
-RUN apt-get update && apt-get install -y git vim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git vim procps net-tools iproute2 iputils-ping dnsutils lsof tcpdump telnet \
+    curl wget zip unzip xz-utils lsb-release tzdata locales less htop strace bash-completion \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create config directory
 RUN mkdir -p /app/config
