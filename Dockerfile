@@ -15,20 +15,18 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # Install required packages
-RUN pip install mcpo uv mcp-server-time mcp-server-fetch
+RUN pip install mcpo mcp uv mcp-server-time mcp-server-fetch httpx
 
 # RUN npm install @modelcontextprotocol/server-memory
 
 RUN curl -fsSL https://raw.githubusercontent.com/tuannvm/mcp-trino/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 
+# for Trino MCP Tool (https://github.com/TimLukaHorstmann/mcp-weather)
+RUN mkdir -p /root/.local/bin && chmod 755 /root/.local/bin
 ENV PATH="/root/.local/bin:${PATH}"
 
 # Create config directory
 RUN mkdir -p /app/config
-
-# Create MCP config file
-COPY mcp-config.json /app/config/mcp-config.json
-COPY tool-*.py /app/
 
 # Run using the config file
 CMD ["mcpo", "--host", "0.0.0.0", "--port", "8000", "--config", "/app/config/mcp-config.json"]

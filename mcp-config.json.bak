@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch", "--ignore-robots-txt"]
+    },
+    "time": {
+      "command": "uvx",
+      "args": ["mcp-server-time", "--local-timezone=Asia/Seoul"]
+    },
+    "trino": {
+      "command": "mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "host.docker.internal",
+        "TRINO_PORT": "18080",
+        "TRINO_USER": "trino",
+        "TRINO_SCHEME": "http"
+      }
+    },
+    "add": {
+      "command": "python",
+      "args": ["tool-add.py"]
+    }
+  }
+}

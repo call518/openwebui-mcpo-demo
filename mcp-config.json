@@ -8,14 +8,11 @@
       "command": "uvx",
       "args": ["mcp-server-time", "--local-timezone=Asia/Seoul"]
     },
-    "trino": {
-      "command": "mcp-trino",
-      "args": [],
+    "weather": {
+      "command": "npx",
+      "args": ["-y", "@timlukahorstmann/mcp-weather"],
       "env": {
-        "TRINO_HOST": "host.docker.internal",
-        "TRINO_PORT": "18080",
-        "TRINO_USER": "trino",
-        "TRINO_SCHEME": "http"
+        "ACCUWEATHER_API_KEY": "hCTXzeQ3FS7m3qNUgAig6wG6TDzst7XN"
       }
     }
   }
