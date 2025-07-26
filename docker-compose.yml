@@ -14,17 +14,13 @@ services:
 
   # Optional: MCP Proxy Server for tools
   mcp-proxy:
-    build:
-      context: ./mcp-proxy
-      dockerfile: Dockerfile
-    container_name: mcp-proxy
+    image: call518/mcpo-server:latest
+    container_name: mcpo-server
     ports:
       - "8000:8000"
     volumes:
-      - ./mcp-proxy/mcp-config.json:/app/config/mcp-config.json
+      - ./mcp-config.json:/app/config/mcp-config.json
     restart: always
-    profiles:
-      - tools
 
 volumes:
   open-webui-data:
