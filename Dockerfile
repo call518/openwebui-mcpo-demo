@@ -17,7 +17,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 # Install required packages
 RUN pip install mcpo uv mcp-server-time mcp-server-fetch
 
-RUN npm install @modelcontextprotocol/server-memory
+# RUN npm install @modelcontextprotocol/server-memory
+
+RUN curl -fsSL https://raw.githubusercontent.com/tuannvm/mcp-trino/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
+
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Create config directory
 RUN mkdir -p /app/config
