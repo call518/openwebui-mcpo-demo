@@ -16,7 +16,7 @@ RUN mkdir -p /app/config
 
 # Create MCP config file
 COPY mcp-config.json /app/config/mcp-config.json
-COPY mcp-servers/ /app/mcp-servers/
+COPY tool-*.py /app/
 
 # Run using the config file
 CMD ["mcpo", "--host", "0.0.0.0", "--port", "8000", "--config", "/app/config/mcp-config.json"]

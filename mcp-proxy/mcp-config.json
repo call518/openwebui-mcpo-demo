@@ -7,10 +7,6 @@
     "time": {
       "command": "uvx",
       "args": ["mcp-server-time", "--local-timezone=Asia/Seoul"]
-    },
-    "weather": {
-      "command": "uvx",
-      "args": ["python", "mcp-servers/weather_mcp.py"]
     }
   }
 }
