@@ -14,12 +14,13 @@ services:
 
   # Optional: MCP Proxy Server for tools
   mcpo-server:
-    image: call518/mcpo-server:latest
+    image: call518/mcpo-server:1.0.0
     container_name: mcpo-server
     ports:
       - "8000:8000"
     volumes:
       - ./mcp-config.json:/app/config/mcp-config.json
+      - ./tools:/app/tools
     restart: always
 
 volumes:

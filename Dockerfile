@@ -15,7 +15,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # Install required packages
-RUN pip install mcpo mcp uv mcp-server-time mcp-server-fetch httpx
+RUN pip install mcpo mcp fastmcp uv mcp-server-time mcp-server-fetch httpx
 
 # RUN npm install @modelcontextprotocol/server-memory
 
