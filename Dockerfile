@@ -21,9 +21,8 @@ RUN pip install mcpo mcp uv mcp-server-time mcp-server-fetch httpx
 
 RUN curl -fsSL https://raw.githubusercontent.com/tuannvm/mcp-trino/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 
-# for MCP Tools
-RUN mkdir -p /root/.local/bin && chmod 755 /root/.local/bin
-ENV PATH="/root/.local/bin:${PATH}"
+#RUN mkdir -p /root/.local/bin && chmod 755 /root/.local/bin
+#ENV PATH="/root/.local/bin:${PATH}"
 
 # Create config directory
 RUN mkdir -p /app/config

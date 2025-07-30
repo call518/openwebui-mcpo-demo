@@ -20,7 +20,6 @@ services:
       - "8000:8000"
     volumes:
       - ./mcp-config.json:/app/config/mcp-config.json
-      - ./tool-weather:/app/tool-weather
     restart: always
 
 volumes:
