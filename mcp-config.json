@@ -7,6 +7,17 @@
     "time": {
       "command": "uvx",
       "args": ["mcp-server-time", "--local-timezone=Asia/Seoul"]
+    },
+    "weather": {
+      "command": "npx",
+      "args": ["-y", "@timlukahorstmann/mcp-weather"],
+      "env": {
+        "ACCUWEATHER_API_KEY": "hCTXzeQ3FS7m3qNUgAig6wG6TDzst7XN"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/root", "/usr", "/etc", "/var", "/tmp", "/home"]
     }
   }
 }

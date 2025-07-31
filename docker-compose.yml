@@ -14,7 +14,7 @@ services:
 
   # Optional: MCP Proxy Server for tools
   mcpo-server:
-    image: call518/mcpo-server:1.0.0
+    image: call518/mcpo-server:1.0.1
     container_name: mcpo-server
     ports:
       - "8000:8000"
