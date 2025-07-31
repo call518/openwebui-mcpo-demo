@@ -5,6 +5,8 @@ ARG NODE_VERSION=20
 ARG NVM_DIR=/root/.nvm
 ARG PATH=${NVM_DIR}/versions/node/v${NODE_VERSION}/bin:${NVM_DIR}/bin:${PATH}
 
+COPY Dockerfile /Dockerfile
+
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
 RUN source /root/.bashrc && \
         nvm --version && \
