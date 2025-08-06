@@ -910,13 +910,29 @@ async def stop_service(service_name: str) -> str:
 @mcp.tool()
 async def get_request_status(request_id: str) -> str:
     """
-    Retrieves the status of a specific Ambari request operation.
+    Retrieves the status and progress of a specific Ambari request operation.
+    
+    [Tool Role]: Dedicated tool for real-time tracking and reporting of Ambari request status.
+    
+    [Core Functions]:
+    - Query the status, progress, and context of a request by its ID
+    - Provide detailed status (PENDING, IN_PROGRESS, COMPLETED, FAILED, etc.)
+    - Show progress percentage and timing information
+    - Return actionable status for automation and LLM integration
+    
+    [Required Usage Scenarios]:
+    - When users ask for the status or progress of a specific operation/request
+    - When monitoring or troubleshooting Ambari operations
+    - When tracking bulk or individual service actions
+    - When users mention request ID, operation status, or progress
     
     Args:
-        request_id: ID of the request to check
+        request_id: ID of the Ambari request to check (int)
     
     Returns:
-        Request status information (success: detailed status, failure: error message)
+        Request status information (success: detailed status and progress, failure: error message)
+        - Success: Multi-line string with request ID, status, progress, context, start/end time, and status description
+        - Failure: English error message describing the problem
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -968,13 +984,28 @@ async def get_request_status(request_id: str) -> str:
 @mcp.tool()
 async def restart_service(service_name: str) -> str:
     """
-    Restarts a specific service in an Ambari cluster.
+    Restarts a specific service in an Ambari cluster (stop then start).
+
+    [Tool Role]: Dedicated tool for automated restart of Ambari services, ensuring safe stop and start sequence.
+
+    [Core Functions]:
+    - Stop the specified service and wait for completion
+    - Start the service and wait for completion
+    - Return clear success or error message for LLM automation
+
+    [Required Usage Scenarios]:
+    - When users request to "restart" a service (e.g., "restart HDFS", "restart YARN")
+    - When troubleshooting or recovering service issues
+    - When maintenance or configuration changes require a restart
+    - When users mention service restart, safe restart, or automated restart
 
     Args:
-        service_name: Name of the service to restart (e.g., "HDFS", "YARN").
+        service_name: Name of the service to restart (e.g., "HDFS", "YARN")
 
     Returns:
-        Result of the restart operation.
+        Restart operation result (success: English completion message, failure: English error message)
+        - Success: "Service '<service_name>' restart operation completed successfully."
+        - Failure: "Error: ..." with details
     """
     cluster_name = AMBARI_CLUSTER_NAME
 
