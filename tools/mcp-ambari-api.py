@@ -93,16 +93,28 @@ async def make_ambari_request(endpoint: str, method: str = "GET", data: Optional
 
 
 @mcp.tool()
-async def get_service_configurations(service_name: str, config_type: Optional[str] = None) -> str:
+async def get_configurations(service_name: str, config_type: Optional[str] = None) -> str:
     """
     Retrieves configuration information for a specific service in an Ambari cluster.
 
+    [Tool Role]: Dedicated tool for retrieving service configuration types and values from Ambari.
+
+    [Core Functions]:
+    - List available configuration types for a service
+    - Retrieve latest configuration values for a specific type
+    - Provide clear output for LLM automation and troubleshooting
+
+    [Required Usage Scenarios]:
+    - When users request service configuration details or types
+    - When troubleshooting or tuning service settings
+    - When users mention config type, config value, or configuration list
+
     Args:
-        service_name: Name of the service (e.g., "HDFS", "YARN", "HBASE").
-        config_type: Specific configuration type to fetch (optional).
+        service_name: Name of the service (e.g., "HDFS", "YARN", "HBASE")
+        config_type: Specific configuration type to fetch (optional)
 
     Returns:
-        Configuration information or a list of available configuration types.
+        Configuration information or a list of available configuration types (success: formatted list or values, failure: English error message)
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -129,7 +141,7 @@ async def get_service_configurations(service_name: str, config_type: Optional[st
             for config_type in config_types:
                 result_lines.append(f"- {config_type}")
 
-            result_lines.append("\nTip: Use this tool again with the 'config_type' argument to fetch specific configuration values.")
+            result_lines.append("\nTip: Use get_configurations again with the 'config_type' argument to fetch specific configuration values.")
             return "\n".join(result_lines)
 
         # Fetch the latest configuration values for the specified type
@@ -177,12 +189,23 @@ async def get_service_configurations(service_name: str, config_type: Optional[st
         return f"Error: Exception occurred while retrieving configurations - {str(e)}"
 
 @mcp.tool()
-async def list_cluster_configurations() -> str:
+async def list_configurations() -> str:
     """
     Lists all configuration types available in the cluster.
 
+    [Tool Role]: Dedicated tool for listing all Ambari cluster configuration types.
+
+    [Core Functions]:
+    - Retrieve all configuration types present in the cluster
+    - Provide formatted output for LLM automation and cluster management
+
+    [Required Usage Scenarios]:
+    - When users request cluster configuration types or overview
+    - When troubleshooting or auditing cluster settings
+    - When users mention config type list, cluster config, or available configs
+
     Returns:
-        A list of all configuration types in the cluster.
+        A list of all configuration types in the cluster (success: formatted list, failure: English error message)
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -212,11 +235,20 @@ async def list_cluster_configurations() -> str:
 async def get_cluster_info() -> str:
     """
     Retrieves basic information for an Ambari cluster.
-    
-    [Tool Role]: Dedicated tool for real-time retrieval of overall status and basic information for an Ambari cluster
-    
+
+    [Tool Role]: Dedicated tool for real-time retrieval of overall status and basic information for an Ambari cluster.
+
+    [Core Functions]:
+    - Retrieve cluster name, version, provisioning state, and security type
+    - Provide formatted output for LLM automation and cluster monitoring
+
+    [Required Usage Scenarios]:
+    - When users request cluster info, status, or summary
+    - When monitoring cluster health or auditing cluster properties
+    - When users mention cluster overview, Ambari cluster, or cluster details
+
     Returns:
-        Cluster basic information (name, version, status, etc.)
+        Cluster basic information (success: formatted info, failure: English error message)
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -450,12 +482,24 @@ async def get_service_status(service_name: str) -> str:
 async def get_service_components(service_name: str) -> str:
     """
     Retrieves detailed components information for a specific service in the Ambari cluster.
-    
+
+    [Tool Role]: Dedicated tool for retrieving service component details and host assignments.
+
+    [Core Functions]:
+    - List all components for a service, including state and category
+    - Show host assignments and instance counts
+    - Provide formatted output for LLM automation and troubleshooting
+
+    [Required Usage Scenarios]:
+    - When users request service component details or host info
+    - When troubleshooting service health or scaling
+    - When users mention component list, host assignments, or service breakdown
+
     Args:
         service_name: Name of the service (e.g., "HDFS", "YARN", "HBASE")
-    
+
     Returns:
-        Service components detailed information (success: component list with details, failure: error message)
+        Service components detailed information (success: formatted list, failure: English error message)
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -547,12 +591,23 @@ async def get_service_components(service_name: str) -> str:
 async def get_service_details(service_name: str) -> str:
     """
     Retrieves detailed status and configuration information for a specific service in the Ambari cluster.
-    
+
+    [Tool Role]: Dedicated tool for retrieving comprehensive service details, including state, components, and configuration.
+
+    [Core Functions]:
+    - Retrieve service state, component list, and configuration availability
+    - Provide formatted output for LLM automation and troubleshooting
+
+    [Required Usage Scenarios]:
+    - When users request detailed service info or breakdown
+    - When troubleshooting service health or auditing service setup
+    - When users mention service details, service summary, or configuration status
+
     Args:
         service_name: Name of the service to check (e.g., "HDFS", "YARN", "HBASE")
-    
+
     Returns:
-        Detailed service information (success: comprehensive service details, failure: error message)
+        Detailed service information (success: comprehensive details, failure: English error message)
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -620,17 +675,21 @@ async def get_service_details(service_name: str) -> str:
 async def start_all_services() -> str:
     """
     Starts all services in an Ambari cluster (equivalent to "Start All" in Ambari Web UI).
-    
-    [Tool Usage]: Use this function when users request to:
-    - "start all services", "start everything", "cluster startup"
-    - "bring up all services", "start entire cluster"
-    
-    [Function Purpose]: Bulk service management - starts all installed services simultaneously
-    rather than starting each service individually. This is much more efficient than
-    calling start_service() for each service separately.
-    
+
+    [Tool Role]: Dedicated tool for bulk starting all services in the cluster, automating mass startup.
+
+    [Core Functions]:
+    - Start all installed services simultaneously
+    - Return request information for progress tracking
+    - Provide clear success or error message for LLM automation
+
+    [Required Usage Scenarios]:
+    - When users request to "start all services", "start everything", "cluster startup"
+    - When recovering cluster after maintenance or outage
+    - When users mention mass startup, bulk start, or cluster bring-up
+
     Returns:
-        Start operation result (success: request info, failure: error message)
+        Start operation result (success: request info, failure: English error message)
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -699,17 +758,21 @@ async def start_all_services() -> str:
 async def stop_all_services() -> str:
     """
     Stops all services in an Ambari cluster (equivalent to "Stop All" in Ambari Web UI).
-    
-    [Tool Usage]: Use this function when users request to:
-    - "stop all services", "stop everything", "cluster shutdown"
-    - "halt all services", "shutdown entire cluster"
-    
-    [Function Purpose]: Bulk service management - stops all running services simultaneously
-    rather than stopping each service individually. This is much more efficient than 
-    calling stop_service() for each service separately.
-    
+
+    [Tool Role]: Dedicated tool for bulk stopping all services in the cluster, automating mass shutdown.
+
+    [Core Functions]:
+    - Stop all running services simultaneously
+    - Return request information for progress tracking
+    - Provide clear success or error message for LLM automation
+
+    [Required Usage Scenarios]:
+    - When users request to "stop all services", "stop everything", "cluster shutdown"
+    - When cluster maintenance or troubleshooting requires mass shutdown
+    - When users mention mass shutdown, bulk stop, or cluster halt
+
     Returns:
-        Stop operation result (success: request info, failure: error message)
+        Stop operation result (success: request info, failure: English error message)
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -791,12 +854,27 @@ async def stop_all_services() -> str:
 async def start_service(service_name: str) -> str:
     """
     Starts a specific service in the Ambari cluster.
-    
+
+    [Tool Role]: Dedicated tool for automated start of Ambari services, ensuring safe and monitored startup.
+
+    [Core Functions]:
+    - Start the specified service and initiate Ambari request
+    - Return request information for progress tracking
+    - Provide clear success or error message for LLM automation
+
+    [Required Usage Scenarios]:
+    - When users request to "start" a service (e.g., "start HDFS", "start YARN")
+    - When recovering stopped services
+    - When maintenance or configuration changes require a service start
+    - When users mention service start, bring up service, or automated start
+
     Args:
         service_name: Name of the service to start (e.g., "HDFS", "YARN", "HBASE")
-    
+
     Returns:
         Start operation result (success: request info, failure: error message)
+        - Success: Multi-line string with request ID, status, monitor URL, and instructions for progress tracking
+        - Failure: English error message describing the problem
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
@@ -851,12 +929,26 @@ async def start_service(service_name: str) -> str:
 async def stop_service(service_name: str) -> str:
     """
     Stops a specific service in the Ambari cluster.
-    
+
+    [Tool Role]: Dedicated tool for automated stop of Ambari services, ensuring safe and monitored shutdown.
+
+    [Core Functions]:
+    - Stop the specified service and initiate Ambari request
+    - Return request information for progress tracking
+    - Provide clear success or error message for LLM automation
+
+    [Required Usage Scenarios]:
+    - When users request to "stop" a service (e.g., "stop HDFS", "stop YARN")
+    - When maintenance or troubleshooting requires a service shutdown
+    - When users mention service stop, shutdown, or automated stop
+
     Args:
         service_name: Name of the service to stop (e.g., "HDFS", "YARN", "HBASE")
-    
+
     Returns:
         Stop operation result (success: request info, failure: error message)
+        - Success: Multi-line string with request ID, status, monitor URL, and instructions for progress tracking
+        - Failure: English error message describing the problem
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
