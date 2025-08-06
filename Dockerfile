@@ -20,6 +20,7 @@ RUN pip install \
         'httpx>=0.28.1' \
         'aiohttp>=3.8.0'
 
+# (Optional) Install Trino MCP Tool (GitHub repository: https://github.com/tuannvm/mcp-trino)
 RUN curl -fsSL https://raw.githubusercontent.com/tuannvm/mcp-trino/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 
 RUN mkdir -p /app/config
