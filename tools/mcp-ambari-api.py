@@ -326,17 +326,18 @@ async def get_service_status(service_name: str) -> str:
 @mcp.tool()
 async def get_service_components(service_name: str) -> str:
     """
-    Retrieves the components of a specific service in the Ambari cluster.
+    Retrieves detailed components information for a specific service in the Ambari cluster.
     
     Args:
         service_name: Name of the service (e.g., "HDFS", "YARN", "HBASE")
     
     Returns:
-        Service components information (success: component list, failure: error message)
+        Service components detailed information (success: component list with details, failure: error message)
     """
     cluster_name = AMBARI_CLUSTER_NAME
     try:
-        endpoint = f"/clusters/{cluster_name}/services/{service_name}/components"
+        # Get detailed component information including host components
+        endpoint = f"/clusters/{cluster_name}/services/{service_name}/components?fields=ServiceComponentInfo/component_name,ServiceComponentInfo/state,ServiceComponentInfo/category,ServiceComponentInfo/started_count,ServiceComponentInfo/installed_count,ServiceComponentInfo/total_count,host_components/HostRoles/host_name,host_components/HostRoles/state"
         response_data = await make_ambari_request(endpoint)
         
         if response_data is None:
@@ -349,8 +350,10 @@ async def get_service_components(service_name: str) -> str:
         if not components:
             return f"No components found for service '{service_name}' in cluster '{cluster_name}'."
         
-        result_lines = [f"Components for service '{service_name}':"]
-        result_lines.append("=" * 50)
+        result_lines = [f"Detailed Components for service '{service_name}':"]
+        result_lines.append("=" * 60)
+        result_lines.append(f"Total Components: {len(components)}")
+        result_lines.append("")
         
         for i, component in enumerate(components, 1):
             comp_info = component.get("ServiceComponentInfo", {})
@@ -358,10 +361,59 @@ async def get_service_components(service_name: str) -> str:
             comp_state = comp_info.get("state", "Unknown")
             comp_category = comp_info.get("category", "Unknown")
             
+            # Component counts
+            started_count = comp_info.get("started_count", 0)
+            installed_count = comp_info.get("installed_count", 0)
+            total_count = comp_info.get("total_count", 0)
+            
+            # Host components information
+            host_components = component.get("host_components", [])
+            
             result_lines.append(f"{i}. Component: {comp_name}")
             result_lines.append(f"   State: {comp_state}")
             result_lines.append(f"   Category: {comp_category}")
+            
+            # Add component state description
+            state_descriptions = {
+                'STARTED': 'Component is running',
+                'INSTALLED': 'Component is installed but not running',
+                'STARTING': 'Component is starting',
+                'STOPPING': 'Component is stopping',
+                'INSTALL_FAILED': 'Component installation failed',
+                'MAINTENANCE': 'Component is in maintenance mode',
+                'UNKNOWN': 'Component state is unknown'
+            }
+            
+            if comp_state in state_descriptions:
+                result_lines.append(f"   Description: {state_descriptions[comp_state]}")
+            
+            # Add instance counts if available
+            if total_count > 0:
+                result_lines.append(f"   Instances: {started_count} started / {installed_count} installed / {total_count} total")
+            
+            # Add host information
+            if host_components:
+                result_lines.append(f"   Hosts ({len(host_components)} instances):")
+                for j, host_comp in enumerate(host_components[:5], 1):  # Show first 5 hosts
+                    host_roles = host_comp.get("HostRoles", {})
+                    host_name = host_roles.get("host_name", "Unknown")
+                    host_state = host_roles.get("state", "Unknown")
+                    result_lines.append(f"      {j}. {host_name} [{host_state}]")
+                
+                if len(host_components) > 5:
+                    result_lines.append(f"      ... and {len(host_components) - 5} more hosts")
+            else:
+                result_lines.append("   Hosts: No host assignments found")
+            
             result_lines.append("")
+        
+        # Add summary statistics
+        total_instances = sum(len(comp.get("host_components", [])) for comp in components)
+        started_components = len([comp for comp in components if comp.get("ServiceComponentInfo", {}).get("state") == "STARTED"])
+        
+        result_lines.append("Summary:")
+        result_lines.append(f"  - Components: {len(components)} total, {started_components} started")
+        result_lines.append(f"  - Total component instances across all hosts: {total_instances}")
         
         return "\n".join(result_lines)
         
