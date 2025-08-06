@@ -13,6 +13,7 @@ import os
 import aiohttp
 import json
 from base64 import b64encode
+import asyncio  # Add this import at the top of the file to use asyncio.sleep
 
 # =============================================================================
 # Server Initialization
@@ -958,6 +959,111 @@ async def get_request_status(request_id: str) -> str:
         
     except Exception as e:
         return f"Error: Exception occurred while retrieving request status - {str(e)}"
+
+@mcp.tool()
+async def restart_service(service_name: str) -> str:
+    """
+    Restarts a specific service in an Ambari cluster.
+
+    Args:
+        service_name: Name of the service to restart (e.g., "HDFS", "YARN").
+
+    Returns:
+        Result of the restart operation.
+    """
+    cluster_name = AMBARI_CLUSTER_NAME
+
+    try:
+        # Step 1: Stop the service
+        stop_endpoint = f"/clusters/{cluster_name}/services/{service_name}"
+        stop_payload = {
+            "RequestInfo": {
+                "context": f"Stop {service_name} service via MCP API",
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": cluster_name,
+                    "service_name": service_name
+                }
+            },
+            "Body": {
+                "ServiceInfo": {
+                    "state": "INSTALLED"
+                }
+            }
+        }
+
+        stop_response = await make_ambari_request(stop_endpoint, method="PUT", data=stop_payload)
+
+        if "error" in stop_response:
+            return f"Error: Unable to stop service '{service_name}'. {stop_response['error']}"
+
+        stop_request_id = stop_response.get("Requests", {}).get("id", "Unknown")
+        if stop_request_id == "Unknown":
+            return f"Error: Failed to retrieve stop request ID for service '{service_name}'."
+
+        # Step 2: Wait for the stop operation to complete
+        while True:
+            status_endpoint = f"/clusters/{cluster_name}/requests/{stop_request_id}"
+            status_response = await make_ambari_request(status_endpoint)
+
+            if "error" in status_response:
+                return f"Error: Unable to check status of stop operation for service '{service_name}'. {status_response['error']}"
+
+            request_status = status_response.get("Requests", {}).get("request_status", "Unknown")
+            if request_status == "COMPLETED":
+                break
+            elif request_status in ["FAILED", "ABORTED"]:
+                return f"Error: Stop operation for service '{service_name}' failed with status '{request_status}'."
+
+            await asyncio.sleep(5)  # Wait for 5 seconds before checking again
+
+        # Step 3: Start the service
+        start_endpoint = f"/clusters/{cluster_name}/services/{service_name}"
+        start_payload = {
+            "RequestInfo": {
+                "context": f"Start {service_name} service via MCP API",
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": cluster_name,
+                    "service_name": service_name
+                }
+            },
+            "Body": {
+                "ServiceInfo": {
+                    "state": "STARTED"
+                }
+            }
+        }
+
+        start_response = await make_ambari_request(start_endpoint, method="PUT", data=start_payload)
+
+        if "error" in start_response:
+            return f"Error: Unable to start service '{service_name}'. {start_response['error']}"
+
+        start_request_id = start_response.get("Requests", {}).get("id", "Unknown")
+        if start_request_id == "Unknown":
+            return f"Error: Failed to retrieve start request ID for service '{service_name}'."
+
+        # Step 4: Wait for the start operation to complete
+        while True:
+            status_endpoint = f"/clusters/{cluster_name}/requests/{start_request_id}"
+            status_response = await make_ambari_request(status_endpoint)
+
+            if "error" in status_response:
+                return f"Error: Unable to check status of start operation for service '{service_name}'. {status_response['error']}"
+
+            request_status = status_response.get("Requests", {}).get("request_status", "Unknown")
+            if request_status == "COMPLETED":
+                break
+            elif request_status in ["FAILED", "ABORTED"]:
+                return f"Error: Start operation for service '{service_name}' failed with status '{request_status}'."
+
+            await asyncio.sleep(5)  # Wait for 5 seconds before checking again
+
+        return f"Service '{service_name}' successfully restarted."
+
+    except Exception as e:
+        return f"Error: Exception occurred while restarting service '{service_name}' - {str(e)}"
 
 # =============================================================================
 # Server Execution
