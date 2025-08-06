@@ -14,6 +14,11 @@ import aiohttp
 import json
 from base64 import b64encode
 import asyncio  # Add this import at the top of the file to use asyncio.sleep
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("AmbariService")
 
 # =============================================================================
 # Server Initialization
@@ -975,6 +980,7 @@ async def restart_service(service_name: str) -> str:
 
     try:
         # Step 1: Stop the service
+        logger.info("Stopping service '%s'...", service_name)
         stop_endpoint = f"/clusters/{cluster_name}/services/{service_name}"
         stop_payload = {
             "RequestInfo": {
@@ -1010,14 +1016,18 @@ async def restart_service(service_name: str) -> str:
                 return f"Error: Unable to check status of stop operation for service '{service_name}'. {status_response['error']}"
 
             request_status = status_response.get("Requests", {}).get("request_status", "Unknown")
+            progress_percent = status_response.get("Requests", {}).get("progress_percent", 0)
+
             if request_status == "COMPLETED":
                 break
             elif request_status in ["FAILED", "ABORTED"]:
                 return f"Error: Stop operation for service '{service_name}' failed with status '{request_status}'."
 
+            logger.info("Stopping service '%s'... Progress: %d%%", service_name, progress_percent)
             await asyncio.sleep(5)  # Wait for 5 seconds before checking again
 
         # Step 3: Start the service
+        logger.info("Starting service '%s'...", service_name)
         start_endpoint = f"/clusters/{cluster_name}/services/{service_name}"
         start_payload = {
             "RequestInfo": {
@@ -1053,16 +1063,21 @@ async def restart_service(service_name: str) -> str:
                 return f"Error: Unable to check status of start operation for service '{service_name}'. {status_response['error']}"
 
             request_status = status_response.get("Requests", {}).get("request_status", "Unknown")
+            progress_percent = status_response.get("Requests", {}).get("progress_percent", 0)
+
             if request_status == "COMPLETED":
                 break
             elif request_status in ["FAILED", "ABORTED"]:
                 return f"Error: Start operation for service '{service_name}' failed with status '{request_status}'."
 
+            logger.info("Starting service '%s'... Progress: %d%%", service_name, progress_percent)
             await asyncio.sleep(5)  # Wait for 5 seconds before checking again
 
+        logger.info("Service '%s' successfully restarted.", service_name)
         return f"Service '{service_name}' successfully restarted."
 
     except Exception as e:
+        logger.error("Error occurred while restarting service '%s': %s", service_name, str(e))
         return f"Error: Exception occurred while restarting service '{service_name}' - {str(e)}"
 
 # =============================================================================
