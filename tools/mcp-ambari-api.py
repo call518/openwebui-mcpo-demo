@@ -1074,11 +1074,13 @@ async def restart_service(service_name: str) -> str:
             await asyncio.sleep(5)  # Wait for 5 seconds before checking again
 
         logger.info("Service '%s' successfully restarted.", service_name)
-        return f"Service '{service_name}' successfully restarted."
+        # Return success message in English
+        return f"Service '{service_name}' restart operation completed successfully."
 
     except Exception as e:
         logger.error("Error occurred while restarting service '%s': %s", service_name, str(e))
-        return f"Error: Exception occurred while restarting service '{service_name}' - {str(e)}"
+        # Return error message in English
+        return f"Error: Service '{service_name}' restart operation failed: {str(e)}"
 
 # =============================================================================
 # Server Execution
