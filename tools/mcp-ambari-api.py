@@ -1130,7 +1130,7 @@ async def restart_service(service_name: str) -> str:
         if stop_request_id == "Unknown":
             return f"Error: Failed to retrieve stop request ID for service '{service_name}'."
 
-        # Step 2: Wait for the stop operation to complete
+        # Step 2: Wait for the stop operation to complete (print progress only for stop)
         while True:
             status_endpoint = f"/clusters/{cluster_name}/requests/{stop_request_id}"
             status_response = await make_ambari_request(status_endpoint)
@@ -1147,10 +1147,9 @@ async def restart_service(service_name: str) -> str:
                 return f"Error: Stop operation for service '{service_name}' failed with status '{request_status}'."
 
             logger.info("Stopping service '%s'... Progress: %d%%", service_name, progress_percent)
-            await asyncio.sleep(5)  # Wait for 5 seconds before checking again
+            await asyncio.sleep(1)  # Wait for 5 seconds before checking again
 
-        # Step 3: Start the service
-        logger.info("Starting service '%s'...", service_name)
+        # Step 3: Start the service (no progress output, fire and forget)
         start_endpoint = f"/clusters/{cluster_name}/services/{service_name}"
         start_payload = {
             "RequestInfo": {
@@ -1173,37 +1172,74 @@ async def restart_service(service_name: str) -> str:
         if "error" in start_response:
             return f"Error: Unable to start service '{service_name}'. {start_response['error']}"
 
-        start_request_id = start_response.get("Requests", {}).get("id", "Unknown")
-        if start_request_id == "Unknown":
-            return f"Error: Failed to retrieve start request ID for service '{service_name}'."
-
-        # Step 4: Wait for the start operation to complete
-        while True:
-            status_endpoint = f"/clusters/{cluster_name}/requests/{start_request_id}"
-            status_response = await make_ambari_request(status_endpoint)
-
-            if "error" in status_response:
-                return f"Error: Unable to check status of start operation for service '{service_name}'. {status_response['error']}"
-
-            request_status = status_response.get("Requests", {}).get("request_status", "Unknown")
-            progress_percent = status_response.get("Requests", {}).get("progress_percent", 0)
-
-            if request_status == "COMPLETED":
-                break
-            elif request_status in ["FAILED", "ABORTED"]:
-                return f"Error: Start operation for service '{service_name}' failed with status '{request_status}'."
-
-            logger.info("Starting service '%s'... Progress: %d%%", service_name, progress_percent)
-            await asyncio.sleep(5)  # Wait for 5 seconds before checking again
-
+        # No need to wait for start completion or print progress
         logger.info("Service '%s' successfully restarted.", service_name)
-        # Return success message in English
         return f"Service '{service_name}' restart operation completed successfully."
 
     except Exception as e:
         logger.error("Error occurred while restarting service '%s': %s", service_name, str(e))
-        # Return error message in English
         return f"Error: Service '{service_name}' restart operation failed: {str(e)}"
+
+@mcp.tool()
+async def restart_all_services() -> str:
+    """
+    Restarts all services in the Ambari cluster (stop all, then start all).
+
+    [Tool Role]: Dedicated tool for automated bulk restart of all Ambari services, ensuring safe stop and start sequence.
+
+    [Core Functions]:
+    - Stop all running services and wait for completion
+    - Start all services and wait for completion
+    - Return clear success or error message for LLM automation
+
+    [Required Usage Scenarios]:
+    - When users request to "restart all services", "bulk restart", "cluster-wide restart"
+    - When troubleshooting or recovering cluster-wide issues
+    - When maintenance or configuration changes require a full restart
+
+    Returns:
+        Bulk restart operation result (success: English completion message, failure: English error message)
+        - Success: "All services restart operation completed successfully."
+        - Failure: "Error: ..." with details
+    """
+    cluster_name = AMBARI_CLUSTER_NAME
+    try:
+        # Step 1: Stop all services
+        stop_result = await stop_all_services()
+        if stop_result.startswith("Error"):
+            return f"Error: Unable to stop all services. {stop_result}"
+
+        # Extract stop request ID
+        lines = stop_result.splitlines()
+        stop_request_id = None
+        for line in lines:
+            if line.startswith("Request ID:"):
+                stop_request_id = line.split(":", 1)[1].strip()
+                break
+        if not stop_request_id or stop_request_id == "Unknown":
+            return f"Error: Failed to retrieve stop request ID for all services."
+
+        # Wait for stop operation to complete (no progress output)
+        while True:
+            status_result = await get_request_status(stop_request_id)
+            if status_result.startswith("Error"):
+                return f"Error: Unable to check status of stop operation for all services. {status_result}"
+            if "Status: COMPLETED" in status_result:
+                break
+            elif "Status: FAILED" in status_result or "Status: ABORTED" in status_result:
+                return f"Error: Stop operation for all services failed. {status_result}"
+            await asyncio.sleep(1)
+
+        # Step 2: Start all services (no progress output, fire and forget)
+        start_result = await start_all_services()
+        if start_result.startswith("Error"):
+            return f"Error: Unable to start all services. {start_result}"
+
+        # No need to wait for start completion or print progress
+        return "All services restart operation completed successfully."
+
+    except Exception as e:
+        return f"Error: All services restart operation failed: {str(e)}"
 
 # =============================================================================
 # Server Execution
