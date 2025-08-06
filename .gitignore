@@ -1,5 +1,6 @@
 # 노드 모듈 및 로그
 .venv/
+.github/copilot-instructions.md
 node_modules/
 npm-debug.log
 yarn-error.log
