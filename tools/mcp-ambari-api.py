@@ -85,6 +85,87 @@ async def make_ambari_request(endpoint: str, method: str = "GET", data: Optional
 
 #-----------------------------------------------------------------------------------
 
+
+@mcp.tool()
+async def get_service_configurations(service_name: str) -> str:
+    """
+    [TOOL ROLE]:
+    - Ambari 서비스의 설정(desired_configs, configs 등) 정보를 실시간으로 조회하는 전용 도구
+
+    [CORE FUNCTIONS]:
+    - 서비스 단위의 desired_configs(적용된 설정 태그) 및 configs(설정 타입/버전 등) 정보 조회
+    - 서비스별 configuration 상태, 변경 이력, 적용 태그 등 확인
+    - Ambari REST API를 통해 서비스 설정 내역을 상세하게 반환
+
+    [REQUIRED USAGE SCENARIOS]:
+    - 사용자가 "서비스 설정 보여줘", "HDFS 설정 내역", "YARN configuration 상태" 등 요청 시
+    - 서비스별 적용된 설정 태그(desired_configs) 및 config 타입/버전 확인이 필요할 때
+    - Ambari에서 서비스의 configuration 내역을 직접적으로 보고 싶을 때
+
+    Args:
+        service_name: Name of the service (e.g., "HDFS", "YARN", "HBASE")
+
+    Returns:
+        Service configuration information (success: info, failure: error message)
+    """
+    cluster_name = AMBARI_CLUSTER_NAME
+    try:
+        # 서비스별 주요 config type 목록 정의 (확장 가능)
+        service_config_types = {
+            "HDFS": ["hdfs-site", "core-site"],
+            "YARN": ["yarn-site", "core-site"],
+            "HBASE": ["hbase-site", "core-site"],
+            # 필요시 추가
+        }
+        config_types = service_config_types.get(service_name.upper(), [])
+        if not config_types:
+            return f"Error: No config types defined for service '{service_name}'."
+
+        result_lines = [f"Service Configuration for '{service_name}':", "="*50]
+        result_lines.append(f"Cluster: {cluster_name}")
+
+        for config_type in config_types:
+            # 1. 최신 tag 추출
+            type_endpoint = f"/clusters/{cluster_name}/configurations?type={config_type}"
+            type_data = await make_ambari_request(type_endpoint)
+            items = type_data.get("items", []) if type_data else []
+            if not items:
+                result_lines.append(f"[{config_type}] No configuration found.")
+                continue
+            # 최신 tag: 가장 마지막 items의 tag 사용
+            latest_item = items[-1]
+            tag = latest_item.get("tag", "Unknown")
+            version = latest_item.get("version", "Unknown")
+            result_lines.append(f"[{config_type}] Latest tag: {tag} (version: {version})")
+
+            # 2. 해당 tag로 실제 설정값 조회
+            config_endpoint = f"/clusters/{cluster_name}/configurations?type={config_type}&tag={tag}"
+            config_data = await make_ambari_request(config_endpoint)
+            config_items = config_data.get("items", []) if config_data else []
+            if not config_items:
+                result_lines.append(f"  No properties found for tag {tag}.")
+                continue
+            for item in config_items:
+                properties = item.get("properties", {})
+                if properties:
+                    result_lines.append(f"  Properties:")
+                    for k, v in properties.items():
+                        result_lines.append(f"    {k}: {v}")
+                else:
+                    result_lines.append(f"  No properties found.")
+                # properties_attributes (final 등)
+                prop_attrs = item.get("properties_attributes", {})
+                if prop_attrs:
+                    result_lines.append(f"  Properties Attributes:")
+                    for attr_type, attr_map in prop_attrs.items():
+                        result_lines.append(f"    [{attr_type}]")
+                        for k, v in attr_map.items():
+                            result_lines.append(f"      {k}: {v}")
+
+        return "\n".join(result_lines)
+    except Exception as e:
+        return f"Error: Exception occurred while retrieving service configurations - {str(e)}"
+
 @mcp.tool()
 async def get_cluster_info() -> str:
     """
