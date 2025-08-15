@@ -10,7 +10,7 @@ services:
       - open-webui-data:/app/backend/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    restart: always
+    #restart: always
 
   # Optional: MCP Proxy Server for tools
   mcpo-proxy:
@@ -21,7 +21,7 @@ services:
     volumes:
       - ./mcp-config.json:/app/config/mcp-config.json
       - ./tools:/app/tools
-    restart: always
+    #restart: always
 
 volumes:
   open-webui-data:
