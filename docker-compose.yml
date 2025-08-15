@@ -14,7 +14,7 @@ services:
 
   # Optional: MCP Proxy Server for tools
   mcpo-proxy:
-    image: call518/mcpo-proxy:latest
+    image: call518/mcpo-proxy:1.0.0
     container_name: mcpo-proxy
     ports:
       - "8000:8000"
@@ -25,4 +25,4 @@ services:
 
 volumes:
   open-webui-data:
-    name: open-webui-data
+    name: open-webui-data-demo
